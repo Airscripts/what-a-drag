@@ -1,9 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import initalData from "./initial-data";
-import Column from "./column";
-import { DragDropContext } from 'react-beautiful-dnd';
 import styled from 'styled-components';
+import { DragDropContext } from 'react-beautiful-dnd';
+
+import data from "./data";
+import Column from "./column";
 
 import "@atlaskit/css-reset/dist/bundle.css";
 
@@ -12,21 +13,19 @@ const Container = styled.div`
 `;
 
 class App extends React.Component {
-  state = initalData;
+  state = data;
 
   onDragStart = (start) => {
     document.body.style.color = 'orange';
     document.body.style.transition = 'background-color 0.2s ease';
 
     const homeIndex = this.state.columnOrder.indexOf(start.source.droppableId);
-
-    this.setState({
-      homeIndex,
-    });
+    this.setState({ homeIndex });
   }; 
 
   onDragUpdate = update => {
     const { destination } = update;
+
     const opacity = destination
       ? destination.index / Object.keys(this.state.tasks).length
       : 0;
@@ -37,37 +36,23 @@ class App extends React.Component {
   onDragEnd = result => {
     document.body.style.color = 'inherit';
     document.body.style.backgroundColor = 'inherit';
-
-    this.setState({
-      homeIndex: null,
-    });
+    this.setState({ homeIndex: null });
 
     const { destination, source, draggableId } = result;
+    if (!destination) return;
 
-    if (!destination) {
-      return;
-    }
-
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
+    const areIndexesEqual = destination.index === source.index;
+    const areIdsEqual = destination.droppableId === source.droppableId;
+    if (areIdsEqual && areIndexesEqual) return;
 
     const start = this.state.columns[source.droppableId];
     const finish = this.state.columns[destination.droppableId];
 
     if (start === finish) {
       const newTaskIds = Array.from(start.taskIds);
-
       newTaskIds.splice(source.index, 1);
       newTaskIds.splice(destination.index, 0, draggableId);
-  
-      const newColumn = {
-        ...start,
-        taskIds: newTaskIds,
-      };
+      const newColumn = { ...start, taskIds: newTaskIds };
   
       const newState = {
         ...this.state,
@@ -84,19 +69,11 @@ class App extends React.Component {
 
     const startTaskIds = Array.from(start.taskIds);
     startTaskIds.splice(source.index, 1);
-    
-    const newStart = {
-      ...start,
-      taskIds: startTaskIds,
-    };
+    const newStart = { ...start, taskIds: startTaskIds };
 
     const finishTaskIds = Array.from(finish.taskIds);
     finishTaskIds.splice(destination.index, 0, draggableId);
-    
-    const newFinish = {
-      ...finish,
-      taskIds: finishTaskIds,
-    };
+    const newFinish = { ...finish, taskIds: finishTaskIds };
 
     const newState = {
       ...this.state,
@@ -114,18 +91,26 @@ class App extends React.Component {
   render() {
     return (
         <DragDropContext 
+          onDragEnd={this.onDragEnd}
           onDragStart={this.onDragStart}
           onDragUpdate={this.onDragUpdate}
-          onDragEnd={this.onDragEnd}
         >
           <Container>
-          {this.state.columnOrder.map((columnId, index) => {    
+          {this.state.columnOrder.map((columnId, index) => {
             const column = this.state.columns[columnId];
-            const tasks = column.taskIds.map(taskId => this.state.tasks[taskId]);
+
+            const tasks = column.taskIds.map(
+              taskId => this.state.tasks[taskId]
+            );
 
             const isDropDisabled = index < this.state.homeIndex;
     
-            return <Column key={column.id} column={column} tasks={tasks} isDropDisabled={isDropDisabled} />;
+            return <Column
+              tasks={tasks}
+              key={column.id}
+              column={column}
+              isDropDisabled={isDropDisabled}
+            />;
           })}
           </Container>
         </DragDropContext>
