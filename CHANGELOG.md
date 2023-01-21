@@ -11,4 +11,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * feat: add drag n' drop board
 
 ### Full Changelog 
-https://github.com/Airscripts/emdees/commits/1.0.0
+https://github.com/airchive/drago/commits/1.0.0
